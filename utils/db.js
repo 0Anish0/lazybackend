@@ -1,17 +1,51 @@
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
+const User = require('../models/User');
 
 const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
+        // await mongoose.connection.db.collection('users').drop();
+
         // Check if the admin user exists on server startup
         checkAndCreateAdminUser();
-        // await mongoose.connection.db.collection('users').drop();
         console.log('MongoDB connected successfully');
     } catch (err) {
         console.error('MongoDB connection error:', err);
         process.exit(1);
     }
 };
+
+// Function to check and create the default admin user
+async function checkAndCreateAdminUser() {
+    try {
+      const adminUser = await User.findOne({ role: 'admin' });
+      if (!adminUser) {
+        console.log('Admin user not found, creating a default admin user...');
+        
+        // Create a default admin user
+        const newAdmin = new User({
+          first_name: 'Lzy',
+          last_name: 'Crazy',
+          mobile: '1234567899', // Provide a mobile number
+          password: 'lzyadmin@123',
+          gender: 'male',
+          country: 'INDIA',
+          state: 'Uttar Pradesh',
+          city: 'Noida',
+          live_image: 'your-image-url',
+          role: 'admin',
+          user_id: 'admin1234' // Or generate a unique user ID
+        });
+  
+        await newAdmin.save();
+        console.log('Default admin user created successfully');
+      } else {
+        console.log('Admin user already exists');
+      }
+    } catch (error) {
+      console.error('Error checking/creating admin user:', error);
+    }
+}
 
 module.exports = connectDB;
