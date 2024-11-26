@@ -2,6 +2,7 @@ require('dotenv').config();
 const cors = require('cors');
 const express = require('express');
 const connectDB = require('./utils/db');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 app.use(express.json());
@@ -10,7 +11,19 @@ app.use(express.json());
 connectDB();
 
 // Enable CORS
-app.use(cors());
+const corsOptions = {
+    origin: ['http://localhost:3000', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  };
+  
+app.use(cors(corsOptions));
+
+// Middleware
+app.use(express.json());
+
+// Routes
+app.use('/api', authRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
