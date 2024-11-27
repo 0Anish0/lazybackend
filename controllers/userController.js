@@ -3,13 +3,20 @@ const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const User = require('../models/User');
 const { check, validationResult } = require('express-validator');
+const express = require('express');
+const multer = require('multer'); // For handling file uploads
+const { uploadImage, deleteImage } = require('../helpers/cloudinaryHelper');
 
 // For storing OTP temporarily (can use a cache like Redis for production)
 let otpStore = {}; 
+// Set up multer for temporary file storage
+const upload = multer({ dest: 'uploads/' });
 
 // **Signup Controller**
 const signup = async (req, res) => {
   try {
+    console.log('Body:', req.body); // Capture text fields
+    console.log('File:', req.file); // Capture file details
     // Validation for signup fields
     await check('first_name', 'First name is required').notEmpty().run(req);
     await check('last_name', 'Last name is required').notEmpty().run(req);
@@ -19,14 +26,13 @@ const signup = async (req, res) => {
     await check('country', 'Country is required').notEmpty().run(req);
     await check('state', 'State is required').notEmpty().run(req);
     await check('city', 'City is required').notEmpty().run(req);
-    await check('live_image', 'Live image URL is required').notEmpty().run(req);
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { first_name, last_name, mobile, password, gender, country, state, city, live_image } = req.body;
+    const { first_name, last_name, mobile, password, gender, country, state, city } = req.body;
 
     // Check if the mobile number already exists in the database
     const existingUser = await User.findOne({ mobile });
@@ -34,9 +40,29 @@ const signup = async (req, res) => {
       return res.status(400).json({ message: 'Mobile number is already in use' });
     }
 
+    // Check if a file is provided for the live image
+    if (!req.file) {
+      return res.status(400).json({ message: 'Live image is required' });
+    }
+
+    // Upload the live image to Cloudinary
+    let liveImageUrl;
+    const filePath = req.file.path; // Path of the uploaded file
+    try {
+      const cloudinaryResponse = await uploadImage(filePath, { folder: 'live_images' });
+      liveImageUrl = cloudinaryResponse.url;
+    } catch (uploadError) {
+      fs.unlinkSync(filePath); // Remove the temporary file
+      return res.status(500).json({ message: 'Failed to upload live image', error: uploadError.message });
+    }
+
+    // Clean up the temporary file
+    fs.unlinkSync(filePath);
+
     // Generate unique user ID
     const userId = `${first_name.slice(0, 2).toLowerCase()}${moment().format('MMYYYYDDHHmmss')}`;
 
+    // Create and save the new user
     const newUser = new User({
       first_name,
       last_name,
@@ -46,7 +72,7 @@ const signup = async (req, res) => {
       country,
       state,
       city,
-      live_image,
+      live_image: liveImageUrl, // Save Cloudinary URL
       user_id: userId,
     });
 
@@ -100,7 +126,7 @@ const login = async (req, res) => {
       const token = jwt.sign(
         { userId: user.user_id, role: user.role },
         process.env.JWT_SECRET_KEY,
-        { expiresIn: '1h' }
+        { expiresIn: '6h' }
       );
 
       return res.status(200).json({ token, message: 'Login successful' });

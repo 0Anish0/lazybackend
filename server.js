@@ -19,8 +19,12 @@ const corsOptions = {
   
 app.use(cors(corsOptions));
 
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 
 // Routes
 app.use('/api', authRoutes);
