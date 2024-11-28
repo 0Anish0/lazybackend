@@ -3,20 +3,14 @@ const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const User = require('../models/User');
 const { check, validationResult } = require('express-validator');
-const express = require('express');
-const multer = require('multer'); // For handling file uploads
 const { uploadImage, deleteImage } = require('../helpers/cloudinaryHelper');
 
-// For storing OTP temporarily (can use a cache like Redis for production)
-let otpStore = {}; 
-// Set up multer for temporary file storage
-const upload = multer({ dest: 'uploads/' });
-
-// **Signup Controller**
+// Signup Controller
 const signup = async (req, res) => {
+  console.log('Body:', req.body);  // Debugging text fields
+  console.log('File:', req.file);  // Debugging file details
+
   try {
-    console.log('Body:', req.body); // Capture text fields
-    console.log('File:', req.file); // Capture file details
     // Validation for signup fields
     await check('first_name', 'First name is required').notEmpty().run(req);
     await check('last_name', 'Last name is required').notEmpty().run(req);
@@ -34,33 +28,23 @@ const signup = async (req, res) => {
 
     const { first_name, last_name, mobile, password, gender, country, state, city } = req.body;
 
-    // Check if the mobile number already exists in the database
-    const existingUser = await User.findOne({ mobile });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Mobile number is already in use' });
-    }
-
-    // Check if a file is provided for the live image
+    // Check if the file is uploaded
     if (!req.file) {
       return res.status(400).json({ message: 'Live image is required' });
     }
+    // Generate a unique user ID
+    const userId = `${first_name.slice(0, 2).toLowerCase()}${moment().format('MMYYYYDDHHmmss')}`;
 
     // Upload the live image to Cloudinary
+    const fileBuffer = req.file.buffer;  // Multer stores the file in memory
     let liveImageUrl;
-    const filePath = req.file.path; // Path of the uploaded file
     try {
-      const cloudinaryResponse = await uploadImage(filePath, { folder: 'live_images' });
+      const cloudinaryResponse = await uploadImage(fileBuffer, userId, { folder: process.env.CLOUDINARY_FOLDER });  // Pass buffer and filename
       liveImageUrl = cloudinaryResponse.url;
     } catch (uploadError) {
-      fs.unlinkSync(filePath); // Remove the temporary file
+      console.error('Cloudinary Upload Error:', uploadError.message);
       return res.status(500).json({ message: 'Failed to upload live image', error: uploadError.message });
     }
-
-    // Clean up the temporary file
-    fs.unlinkSync(filePath);
-
-    // Generate unique user ID
-    const userId = `${first_name.slice(0, 2).toLowerCase()}${moment().format('MMYYYYDDHHmmss')}`;
 
     // Create and save the new user
     const newUser = new User({
@@ -72,7 +56,7 @@ const signup = async (req, res) => {
       country,
       state,
       city,
-      live_image: liveImageUrl, // Save Cloudinary URL
+      live_image: liveImageUrl,  // Store the Cloudinary URL for the image
       user_id: userId,
     });
 
@@ -80,10 +64,12 @@ const signup = async (req, res) => {
 
     res.status(201).json({ message: 'User created successfully', userId });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in Signup API:', error.message);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+
 
 // **Login Controller (Mobile OTP)**
 const login = async (req, res) => {

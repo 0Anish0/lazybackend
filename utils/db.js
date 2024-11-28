@@ -21,7 +21,7 @@ async function checkAndCreateAdminUser() {
     try {
       const adminUser = await User.findOne({ role: 'admin' });
       if (!adminUser) {
-        console.log('Admin user not found, creating a default admin user...');
+        console.log('Admin user not found');
         
         // Create a default admin user
         const newAdmin = new User({
@@ -39,7 +39,7 @@ async function checkAndCreateAdminUser() {
         });
   
         await newAdmin.save();
-        console.log('Default admin user created successfully');
+        console.log('admin user created successfully');
       } else {
         console.log('Admin user already exists');
       }
