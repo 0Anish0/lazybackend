@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const connectDB = require('./utils/db');
 const authRoutes = require('./apiRoutes');
+const cors = require('cors');
 const multer = require('multer');  // Ensure multer is imported
 const upload = multer({ storage: multer.memoryStorage() }).single('live_image');  // Memory storage
 
@@ -13,12 +14,12 @@ app.use(express.urlencoded({ extended: true }));  // This is for parsing URL-enc
 connectDB();
 
 // Enable CORS
-// const corsOptions = {
-//     origin: ['http://localhost:3000', 'http://localhost:3000'],
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//     allowedHeaders: ['Content-Type', 'Authorization'],
-//   };
-// app.use(cors(corsOptions));
+const corsOptions = {
+    origin: 'https://lazycrazyy.netlify.app', // Your frontend domain
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+  };
+app.use(cors(corsOptions));
 
 // Routes
 // Apply multer upload as middleware for your API that handles file upload
