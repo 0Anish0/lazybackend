@@ -18,8 +18,10 @@ const corsOptions = {
     origin: 'https://lazycrazyy.netlify.app', // Your frontend domain
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
-  };
+    credentials: true, // Include credentials if needed (e.g., cookies)
+};
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Routes
 // Apply multer upload as middleware for your API that handles file upload
