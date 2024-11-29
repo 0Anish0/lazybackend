@@ -64,8 +64,17 @@ const signup = async (req, res) => {
 
     res.status(201).json({ message: 'User created successfully', userId });
   } catch (error) {
+    if (error.code === 11000) {
+      // Duplicate key error
+      const duplicateField = Object.keys(error.keyValue)[0];  // Extract the duplicate field
+      return res.status(400).json({
+        message: `The ${duplicateField} is already in use.`,
+        field: duplicateField,
+        value: error.keyValue[duplicateField],
+      });
+    }
     console.error('Error in Signup API:', error.message);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ status:false,message: 'Server error', error: error.message });
   }
 };
 
@@ -77,7 +86,7 @@ const login = async (req, res) => {
 
   // Validate mobile number
   if (!mobile) {
-    return res.status(400).json({ message: 'Mobile number is required' });
+    return res.status(400).json({ status:false,message: 'Mobile number is required' });
   }
 
   try {
@@ -101,34 +110,43 @@ const login = async (req, res) => {
     if (password) {
       const user = await User.findOne({ mobile });
       if (!user) {
-        return res.status(400).json({ message: 'User not found' });
+        return res.status(400).json({ status:false,message: 'User not found' });
       }
       // Check if password matches
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return res.status(400).json({ message: 'Invalid credentials' });
+        return res.status(400).json({ status:true,message: 'Invalid credentials' });
       }
       // Generate JWT Token
       const token = jwt.sign(
-        { userId: user.user_id, role: user.role },
+        { userId: user.user_id, role: user.role,
+          first_name:user.first_name,
+          last_name:user.last_name,
+          mobile:user.mobile,
+          password:user.password,
+          gender:user.gender,
+          country:user.country,
+          state:user.state,
+          city:user.city,
+          live_image: user.live_image },
         process.env.JWT_SECRET_KEY,
         { expiresIn: '6h' }
       );
 
-      return res.status(200).json({ token, message: 'Login successful' });
+      return res.status(200).json({ token,status:true, message: 'Login successful' });
     }
 
     // Case 2: Login with Mobile and OTP
     // else if (otp) {
     //   // Check if OTP exists for the mobile number and if it has expired
     //   if (!otpStore[mobile] || otpStore[mobile].otp !== otp || otpStore[mobile].expiresAt < Date.now()) {
-    //     return res.status(400).json({ message: 'Invalid or expired OTP' });
+    //     return res.status(400).json({status:true, message: 'Invalid or expired OTP' });
     //   }
 
     //   // OTP is valid, generate JWT token
     //   const user = await User.findOne({ mobile });
     //   if (!user) {
-    //     return res.status(400).json({ message: 'User not found' });
+    //     return res.status(400).json({status:true, message: 'User not found' });
     //   }
 
     //   const token = jwt.sign(
@@ -140,14 +158,14 @@ const login = async (req, res) => {
     //   // Clean up OTP store after use
     //   delete otpStore[mobile];
 
-    //   return res.status(200).json({ token, message: 'Login successful' });
+    //   return res.status(200).json({ token,status:true, message: 'Login successful' });
     // } 
     else {
-      return res.status(400).json({ message: 'Either password or OTP is required for login' });
+      return res.status(400).json({status:true, message: 'Either password or OTP is required for login' });
     }
   } catch (error) {
     console.error('Error during login:', error);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({status:false, message: 'Server error' });
   }
 };
 
@@ -156,7 +174,7 @@ const sendOtp = async (req, res) => {
   const { mobile } = req.body;
 
   if (!mobile) {
-    return res.status(400).json({ message: 'Mobile number is required' });
+    return res.status(400).json({status:false, message: 'Mobile number is required' });
   }
 
   try {
@@ -168,13 +186,13 @@ const sendOtp = async (req, res) => {
     }
     const user = await User.findOne({ mobile });
     if (!user) {
-      return res.status(400).json({ message: 'Mobile number not registered.' });
+      return res.status(400).json({status:false, message: 'Mobile number not registered.' });
     }
 
-    return res.status(200).json({ message: 'OTP sent successfully' });
+    return res.status(200).json({status:true, message: 'OTP sent successfully' });
   } catch (error) {
     console.error('Error sending OTP:', error);
-    return res.status(500).json({ message: 'Error sending OTP' });
+    return res.status(500).json({status:false, message: 'Error sending OTP' });
   }
 };
 
@@ -194,13 +212,13 @@ const forgetPassword = async (req, res) => {
 
   if (otp === process.env.OTP || otpStore[mobile] === otp) {
     const user = await User.findOne({ mobile });
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({status:false, message: 'User not found' });
 
     user.password = new_password;
     await user.save();
-    res.json({ message: 'Password updated successfully' });
+    res.json({status:true, message: 'Password updated successfully' });
   } else {
-    res.status(400).json({ message: 'Invalid OTP' });
+    res.status(400).json({status:false, message: 'Invalid OTP' });
   }
 };
 
@@ -246,7 +264,7 @@ const dashboard = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({status:false, message: 'Server error' });
   }
 };
 

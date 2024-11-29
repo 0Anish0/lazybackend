@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 // Middleware to verify if the user is an admin
 const jwtMiddleware = (req, res, next) => {
-  const token = req.headers['auth-token'];
+  const token = req.headers['auth-token'] ? req.headers['auth-token'] : req.headers['authorization']?.split(' ')[1];
   if (!token) {
     return res.status(403).json({ message: 'No token provided' });
   }
@@ -13,6 +13,15 @@ const jwtMiddleware = (req, res, next) => {
     }
     req.userId = decoded.userId;
     req.role = decoded.role; // Store role in the request
+    req.first_name = decoded.first_name;
+    req.last_name = decoded.last_name;
+    req.mobile = decoded.mobile;
+    req.password = decoded.password;
+    req.gender = decoded.gender;
+    req.country = decoded.country;
+    req.state = decoded.state;
+    req.city = decoded.city;
+    req.live_image = decoded.live_image;
     next();
   });
 };
