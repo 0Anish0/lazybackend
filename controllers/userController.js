@@ -166,6 +166,10 @@ const sendOtp = async (req, res) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
+    const user = await User.findOne({ mobile });
+    if (!user) {
+      return res.status(400).json({ message: 'Mobile number not registered.' });
+    }
 
     return res.status(200).json({ message: 'OTP sent successfully' });
   } catch (error) {
