@@ -13,6 +13,13 @@ app.use(cors());
 app.use(express.json());  // For parsing JSON bodies
 app.use(express.urlencoded({ extended: true }));  // For parsing URL-encoded data, especially for form-data
 
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+});
+
 // Routes
 // Apply multer upload as middleware for your API that handles file upload
 app.post('/api/signup', upload, authRoutes);  // Use multer middleware here
