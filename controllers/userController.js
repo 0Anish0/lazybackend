@@ -6,7 +6,7 @@ const { check, validationResult } = require('express-validator');
 const { uploadImage, deleteImage } = require('../helpers/cloudinaryHelper');
 
 // Signup Controller
-const signup = async (req, res) => {
+const signup = async (req, res) => { 
   try {
     // Validation for signup fields
     await check('first_name', 'First name is required').notEmpty().run(req);
@@ -29,9 +29,17 @@ const signup = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'Live image is required' });
     }
-    // Generate a unique user ID
-    const userId = `${first_name.slice(0, 2).toLowerCase()}${moment().format('MMYYYYDDHHmmss')}`;
-
+    const yearMonth = moment().format('YYMM'); // Current year and month Format: YYMM
+    // Fetch the last user for the current year and month
+    const lastUser = await User.findOne().sort({ createdAt: -1 }); // Sort by creation time in descending order
+    let newSequence = 1; // Start with 1 if no users exist // Extract last 4 digits and increment
+    if (lastUser) {
+      const lastSequence = parseInt(lastUser.user_id.slice(-4), 10); // Extract last 4 digits
+      newSequence = lastSequence + 1; // Increment the sequence
+    }
+    // Generate the new user ID
+    const sequencePart = newSequence.toString().padStart(4, '0'); // Ensure 4 digits
+    const userId = `Lz${yearMonth}${sequencePart}`; // Combine prefix, year-month, and sequence
     // Upload the live image to Cloudinary
     const fileBuffer = req.file.buffer;  // Multer stores the file in memory
     let liveImageUrl;
@@ -59,7 +67,22 @@ const signup = async (req, res) => {
 
     await newUser.save();
 
-    res.status(201).json({ message: 'User created successfully', userId });
+    const token = jwt.sign(
+      { userId: newUser.user_id, role: newUser.role,
+        first_name:newUser.first_name,
+        last_name:newUser.last_name,
+        mobile:newUser.mobile,
+        password:newUser.password,
+        gender:newUser.gender,
+        country:newUser.country,
+        state:newUser.state,
+        city:newUser.city,
+        live_image: newUser.live_image },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: '6h' }
+    );
+
+    res.status(201).json({ token, status: true, message: 'User created successfully', userId });
   } catch (error) {
     if (error.code === 11000) {
       // Duplicate key error
@@ -71,7 +94,7 @@ const signup = async (req, res) => {
       });
     }
     console.error('Error in Signup API:', error.message);
-    res.status(500).json({ status:false,message: 'Server error', error: error.message });
+    res.status(500).json({ status: false, message: 'Server error', error: error.message });
   }
 };
 

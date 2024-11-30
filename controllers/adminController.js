@@ -7,7 +7,7 @@ const { check, validationResult } = require('express-validator');
 // List all users
 const listUsers = async (req, res) => {
   try {
-    const users = await User.find({ isDeleted: false }); // Only non-deleted users
+    const users = await User.find({ isDeleted: false, role: { $ne: 'admin' } }); // Only non-deleted users
     res.status(200).json(users);
   } catch (error) {
     console.error(error);

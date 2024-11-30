@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 mongoose.set('strictQuery', false);
 const User = require('../models/User');
+const moment = require('moment');
 
 const connectDB = async () => {
     try {
@@ -22,7 +23,8 @@ async function checkAndCreateAdminUser() {
       const adminUser = await User.findOne({ role: 'admin' });
       if (!adminUser) {
         console.log('Admin user not found');
-        
+        const yearMonth = moment().format('YYMM'); // Current year and month
+        const userId = `Lz${yearMonth}0001`;
         // Create a default admin user
         const newAdmin = new User({
           first_name: 'Lzy',
@@ -35,7 +37,7 @@ async function checkAndCreateAdminUser() {
           city: 'Noida',
           live_image: 'your-image-url',
           role: 'admin',
-          user_id: 'admin1234' // Or generate a unique user ID
+          user_id: userId // Or generate a unique user ID
         });
   
         await newAdmin.save();
