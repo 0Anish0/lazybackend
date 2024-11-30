@@ -6,7 +6,7 @@ const { check, validationResult } = require('express-validator');
 const { uploadImage, deleteImage } = require('../helpers/cloudinaryHelper');
 
 // Signup Controller
-const signup = async (req, res) => { 
+const signup = async (req, res) => {
   try {
     // Validation for signup fields
     await check('first_name', 'First name is required').notEmpty().run(req);
@@ -39,7 +39,7 @@ const signup = async (req, res) => {
     }
     // Generate the new user ID
     const sequencePart = newSequence.toString().padStart(4, '0'); // Ensure 4 digits
-    const userId = `Lz${yearMonth}${sequencePart}`; // Combine prefix, year-month, and sequence
+    const userId = `Lc${yearMonth}${sequencePart}`; // Combine prefix, year-month, and sequence
     // Upload the live image to Cloudinary
     const fileBuffer = req.file.buffer;  // Multer stores the file in memory
     let liveImageUrl;

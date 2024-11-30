@@ -24,7 +24,7 @@ async function checkAndCreateAdminUser() {
       if (!adminUser) {
         console.log('Admin user not found');
         const yearMonth = moment().format('YYMM'); // Current year and month
-        const userId = `Lz${yearMonth}0001`;
+        const userId = `Lc${yearMonth}0001`;
         // Create a default admin user
         const newAdmin = new User({
           first_name: 'Lzy',
