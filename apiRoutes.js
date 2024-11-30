@@ -18,5 +18,6 @@ router.post('/admin/create-user', authMiddleware.isAuth, authMiddleware.isAdmin,
 router.get('/admin/user/:id', authMiddleware.isAuth, authMiddleware.isAdmin, adminController.getUserById);// Get a single user by ID
 router.put('/admin/user/:id', authMiddleware.isAuth, authMiddleware.isAdmin, adminController.updateUser);// Update a user by ID
 router.delete('/admin/user/:id', authMiddleware.isAuth, authMiddleware.isAdmin, adminController.softDeleteUser);// Soft delete a user by ID
+router.post('/admin/user-status', authMiddleware.isAuth, authMiddleware.isAdmin, adminController.userStatus);// Create a user
 
 module.exports = router;

@@ -144,11 +144,33 @@ const softDeleteUser = async (req, res) => {
     res.status(500).json({status:false, message: 'Server error' });
   }
 };
-
+// user disable
+const userStatus = async (req, res) => {
+  try {
+    await check('id', 'Id is required').notEmpty().run(req);
+    await check('status', 'Status is required').notEmpty().run(req);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const { id,status } = req.body;
+    const user = await User.findOne({ user_id: id });
+    if (!user || user.isDeleted) {
+      return res.status(404).json({status:false, message: 'User not found or already deleted' });
+    }
+    user.status = status;
+    await user.save();
+    const Status = status ? "enabled" : "disabled";
+    res.status(200).json({status:true, message: `User ${Status} successfully` });
+  } catch (error) {
+    res.status(500).json({status:false, message: 'Server error' });
+  }
+};
 module.exports = {
   listUsers,
   createUser,
   getUserById,
   updateUser,
   softDeleteUser,
+  userStatus,
 };

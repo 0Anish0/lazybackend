@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema({
   city: {type: String,required: true,},
   live_image: {type: String,required: true,},
   role: { type: String,enum: ['user', 'admin', 'partner'], default: 'user',},
+  status: { type: Boolean, default: true },
   isDeleted: { type: Boolean,default: false,}
 }, { timestamps: true });
 
