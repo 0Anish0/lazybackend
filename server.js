@@ -3,8 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./utils/db');
 const authRoutes = require('./apiRoutes');
-const multer = require('multer');  // Ensure multer is imported
-const upload = multer({ storage: multer.memoryStorage() }).single('live_image');  // Memory storage
 
 // Connect to MongoDB
 connectDB();
@@ -20,9 +18,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Routes
-// Apply multer upload as middleware for your API that handles file upload
-app.post('/api/signup', upload, authRoutes);  // Use multer middleware here
 app.use('/api', authRoutes);  // Define other routes after multer
 
 const PORT = process.env.PORT || 5000;

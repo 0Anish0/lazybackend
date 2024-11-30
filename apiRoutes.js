@@ -1,22 +1,22 @@
 const express = require('express');
-const jwtMiddleware = require('./middlewares/jwtMiddleware');
+const authMiddleware = require('./middlewares/authMiddleware');
 const adminController = require('./controllers/adminController');
 const userController = require('./controllers/userController');
-
+const mediaUpload = require('./middlewares/mediaUpload');
 
 const router = express.Router();
 
-router.post('/signup', userController.signup);// **Signup Route**
+router.post('/signup',mediaUpload, userController.signup);// **Signup Route**
 router.post('/login', userController.login);// **Login Route (Mobile OTP)*
 router.post('/send-otp', userController.sendOtp);// **Send OTP Route**
-router.post('/forget-password', userController.forgetPassword);// **Forget Password Route**
+router.post('/forget-password',mediaUpload, userController.forgetPassword);// **Forget Password Route**
 
-router.get('/dashboard', jwtMiddleware.jwtMiddleware, userController.dashboard);// User dashboard
+router.get('/dashboard', authMiddleware.isAuth, userController.dashboard);// User dashboard
 
-router.get('/admin/list-users', jwtMiddleware.jwtMiddleware, jwtMiddleware.isAdmin, adminController.listUsers);// List all users
-router.post('/admin/create-user', jwtMiddleware.jwtMiddleware, jwtMiddleware.isAdmin, adminController.createUser);// Create a user
-router.get('/admin/user/:id', jwtMiddleware.jwtMiddleware, jwtMiddleware.isAdmin, adminController.getUserById);// Get a single user by ID
-router.put('/admin/user/:id', jwtMiddleware.jwtMiddleware, jwtMiddleware.isAdmin, adminController.updateUser);// Update a user by ID
-router.delete('/admin/user/:id', jwtMiddleware.jwtMiddleware, jwtMiddleware.isAdmin, adminController.softDeleteUser);// Soft delete a user by ID
+router.get('/admin/list-users', authMiddleware.isAuth, authMiddleware.isAdmin, adminController.listUsers);// List all users
+router.post('/admin/create-user', authMiddleware.isAuth, authMiddleware.isAdmin, adminController.createUser);// Create a user
+router.get('/admin/user/:id', authMiddleware.isAuth, authMiddleware.isAdmin, adminController.getUserById);// Get a single user by ID
+router.put('/admin/user/:id', authMiddleware.isAuth, authMiddleware.isAdmin, adminController.updateUser);// Update a user by ID
+router.delete('/admin/user/:id', authMiddleware.isAuth, authMiddleware.isAdmin, adminController.softDeleteUser);// Soft delete a user by ID
 
 module.exports = router;

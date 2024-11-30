@@ -7,9 +7,6 @@ const { uploadImage, deleteImage } = require('../helpers/cloudinaryHelper');
 
 // Signup Controller
 const signup = async (req, res) => {
-  console.log('Body:', req.body);  // Debugging text fields
-  console.log('File:', req.file);  // Debugging file details
-
   try {
     // Validation for signup fields
     await check('first_name', 'First name is required').notEmpty().run(req);
@@ -77,8 +74,6 @@ const signup = async (req, res) => {
     res.status(500).json({ status:false,message: 'Server error', error: error.message });
   }
 };
-
-
 
 // **Login Controller (Mobile OTP)**
 const login = async (req, res) => {

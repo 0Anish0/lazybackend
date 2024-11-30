@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 // Middleware to verify if the user is an admin
-const jwtMiddleware = (req, res, next) => {
+const isAuth = (req, res, next) => {
   const token = req.headers['auth-token'] ? req.headers['auth-token'] : req.headers['authorization']?.split(' ')[1];
   if (!token) {
     return res.status(403).json({ message: 'No token provided' });
@@ -34,4 +34,4 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { jwtMiddleware, isAdmin };
+module.exports = { isAuth, isAdmin };
